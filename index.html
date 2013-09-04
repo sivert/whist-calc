@@ -1,0 +1,337 @@
+<html ng-app>
+  <head>
+    <meta charset="utf-8" />
+    <title>Whist pointtavle</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Keep track of point in the game of Call-ace whist" />
+    <meta name="author" content="Sivert Bertelsen" />
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <style type="text/css">
+      .btn-large{
+          width: 100%;
+          display: table-cell;
+      }
+      .forehand{
+        text-decoration:underline;
+      }
+      .totalrow>th{
+        border-color: black !important;
+      }
+      tr {
+        height: 39px;
+      }
+      th {
+        width: 25%;
+        text-align: center !important;
+      }
+      .active{
+        background-color: #357ebd;
+        color: white;
+      }
+      .panel-footer {
+         padding: 10px 0px !important;
+      }
+    </style>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+
+  </head>
+  <body>
+    <div ng-controller="MyCtrl">
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">  <h1 class="text-center" style="margin: 0px;">&#9824; <span style="display:inline; color:red;">&#9829;</span><span ng-show="winner()"> {{winner()}} vandt</span> &#9827; <span class="red" style="display:inline;color:red;">&#9830;</span></h1></div>
+                <div class="alert alert-danger" ng-show="playerErr" style="margin-bottom: 0px;">Hvem vandt meldingen?</div> 
+                <table class="table">
+                    <thead>
+                        <tr ng-show="gameStarted">
+                            <th><button class="btn btn-large btn-block" ng-class="{active: selA==0||selB==0, forehand:forehand==0}" ng-click="PlayerSelected(0)">{{player1}}</button></th>
+                            <th><button class="btn btn-large btn-block" ng-class="{active: selA==1||selB==1, forehand:forehand==1}" ng-click="PlayerSelected(1)">{{player2}}</button></th>
+                            <th><button class="btn btn-large btn-block" ng-class="{active: selA==2||selB==2, forehand:forehand==2}" ng-click="PlayerSelected(2)">{{player3}}</button></th>
+                            <th><button class="btn btn-large btn-block" ng-class="{active: selA==3||selB==3, forehand:forehand==3}" ng-click="PlayerSelected(3)">{{player4}}</button></th>
+                        </tr>
+                        <tr ng-hide="gameStarted">
+                            <th><input type="text" class="btn-block form-control" placeholder="player1" ng-model="player1input"/></th>
+                            <th><input type="text" class="btn-block form-control" placeholder="player2" ng-model="player2input"/></th>
+                            <th><input type="text" class="btn-block form-control" placeholder="player3" ng-model="player3input"/></th>
+                            <th><input type="text" class="btn-block form-control" placeholder="player4" ng-model="player4input"/></th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardbody">
+                        <tr><th>{{gr(0,0)}}</th><th>{{gr(0,1)}}</th><th>{{gr(0,2)}}</th><th>{{gr(0,3)}}</th></tr>
+                        <tr><th>{{gr(1,0)}}</th><th>{{gr(1,1)}}</th><th>{{gr(1,2)}}</th><th>{{gr(1,3)}}</th></tr>
+                        <tr><th>{{gr(2,0)}}</th><th>{{gr(2,1)}}</th><th>{{gr(2,2)}}</th><th>{{gr(2,3)}}</th></tr>
+                        <tr><th>{{gr(3,0)}}</th><th>{{gr(3,1)}}</th><th>{{gr(3,2)}}</th><th>{{gr(3,3)}}</th></tr>
+                        <tr><th>{{gr(4,0)}}</th><th>{{gr(4,1)}}</th><th>{{gr(4,2)}}</th><th>{{gr(4,3)}}</th></tr>
+                        <tr><th>{{gr(5,0)}}</th><th>{{gr(5,1)}}</th><th>{{gr(5,2)}}</th><th>{{gr(5,3)}}</th></tr>
+                        <tr><th>{{gr(6,0)}}</th><th>{{gr(6,1)}}</th><th>{{gr(6,2)}}</th><th>{{gr(6,3)}}</th></tr>
+                        <tr><th>{{gr(7,0)}}</th><th>{{gr(7,1)}}</th><th>{{gr(7,2)}}</th><th>{{gr(7,3)}}</th></tr>
+                        <tr><th>{{total(0)}}</th><th>{{total(1)}}</th><th>{{total(2)}}</th><th>{{total(3)}}</th></tr>
+                    </tbody>
+                </table>
+                <div class="panel-footer">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-5 col-xs-6 pull-left" >
+                                <select class="form-control" ng-model="bidselect" ng-options="bid as bid.name for bid in bids" ng-hide="winner()" ng-change="setResults()" ng-show="gameStarted" >
+                                    <option value="">-- melding --</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-4 col-md-5 col-xs-6 pull-right" >
+                                <select class="form-control" ng-model="resselect" ng-options="res as res.name for res in results"  ng-hide="winner()" ng-show="gameStarted">
+                                    <option value="">-- antal stik --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="alert alert-danger" ng-show="bidderErr" style="margin-bottom: 0px;">Hvor meget blev der budt?</div>
+                            <div class="alert alert-danger" ng-show="resultErr" style="margin-bottom: 0px;">Hvor mange stik blev der taget?</div>
+                        </div>
+                        <br />
+
+                        <div class="row">
+                            <div class="col-8" ng-show="selA != -1 && bidselect && resselect">
+                                {{player1}}: {{TempResult(0)}}<br>
+                                {{player2}}: {{TempResult(1)}}<br>
+                                {{player3}}: {{TempResult(2)}}<br>
+                                {{player4}}: {{TempResult(3)}}
+                            </div>
+                            <div class="col-4 pull-right" >
+                                <button class="btn btn-primary pull-right" ng-click="AddRound()"  ng-hide="winner()" ng-show="gameStarted">afslut runden</button>
+                                <button class="btn btn-primary pull-right" ng-click="newGame()"  ng-show="winner()" ng-show="gameStarted">nyt spil</button>
+                                <button class="btn btn-primary pull-right" ng-click="startGame()"  ng-show="winner()" ng-hide="gameStarted">start spil</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>   
+            </div>
+        </div>
+    </div>
+    <script>
+      var myApp = angular.module('myApp',[]);
+      CalculateRoundScore = function(roundInfo){
+        var re = 0;
+        var negator = 1;
+        if(!roundInfo.nolo){
+          var tricks = parseInt(roundInfo.bid);
+            var perTrick = 1;
+            if (tricks > 7) {
+                perTrick = Math.pow(2, tricks - 7);
+            }
+            var bal = roundInfo.actualTricks - tricks;
+            negator = 1;
+            if (bal < 0) {
+                negator = 2;
+            } else {
+                bal = bal + 1;
+            }
+            var attMult = 1;
+            if (roundInfo.attachment)
+                attMult = 2;
+            re = bal  * negator * perTrick * attMult;
+            return re;
+        }
+        else {
+            if(roundInfo.actualTricks > 0){
+              negator = -1;
+            }
+            if(roundInfo.bid == 1){
+              if(roundInfo.actualTricks == 1){
+                negator = 1;
+              }
+                re = 5;
+            }
+            if(roundInfo.bid == 2){
+                re = 10;
+            }
+            if(roundInfo.bid == 3){
+              if(roundInfo.actualTricks == 1){
+                negator = 1;
+              }
+                re = 30;
+            }
+            if(roundInfo.bid == 4){
+                re = 60;
+            }
+            if(negator == -1){
+              negator = -2;
+            }
+            return re * negator;
+        }
+      }
+      function RoundInfo (bid, attachment, actualTricks, partner1, partner2) {
+        this.score = [0, 0, 0, 0];
+        this.partner1 = partner1;
+        this.partner2 = partner2;
+        this.bid=bid;
+        this.attachment = attachment;
+        this.actualTricks=actualTricks;
+        this.nolo = (bid<7);
+        var result = CalculateRoundScore(this);
+        if(this.partner2 == -1){
+          this.score[0] = -result;
+          this.score[1] = -result;
+          this.score[2] = -result;
+          this.score[3] = -result;
+          this.score[this.partner1] = 3*result;
+        }
+        else{
+          this.score[0] = -result;
+          this.score[1] = -result;
+          this.score[2] = -result;
+          this.score[3] = -result;
+          this.score[this.partner1] = result;
+          this.score[this.partner2] = result;
+        }
+      }
+
+      function MyCtrl($scope) {
+          $scope.gameStarted = false;
+          $scope.forehand = 0;
+          $scope.rounds = [];
+          $scope.selA = -1;
+          $scope.selB = -1;
+          $scope.winner = function(){
+              if($scope.rounds.length!=8) return false;
+              var index = 0;
+              var score = [$scope.total(0),$scope.total(1),$scope.total(2),$scope.total(3)];
+              for (var i = 0; i < 4; i++) {
+                  if (score[i] > score[index]) index = i;
+              }
+              return ([$scope.player1, $scope.player2, $scope.player3, $scope.player4])[index];
+          };
+          $scope.newgame = function(){
+              $scope.rounds = [];
+          };
+          $scope.startGame = function(){
+            $scope.player1 = $scope.player1input ||"player1";
+            $scope.player2 = $scope.player2input ||"player2";
+            $scope.player3 = $scope.player3input ||"player3";
+            $scope.player4 = $scope.player4input ||"player4";
+            $scope.gameStarted = true;
+          };
+          $scope.bidderErr = false;
+          $scope.resultErr = false;
+          $scope.playerErr = false;
+          $scope.AddRound = function(){
+              $scope.bidderErr = false; $scope.resultErr = false; $scope.playerErr = false;
+              if($scope.selA == -1){
+                  $scope.playerErr = true;
+              }
+              if(!$scope.bidselect){
+                  $scope.bidderErr = true; return;
+              }
+              if(!$scope.resselect){
+                  $scope.resultErr = true; return;
+              }
+              var info = new RoundInfo($scope.bidselect.ticks, $scope.bidselect.plus, $scope.resselect.value, $scope.selA, $scope.selB);
+              $scope.rounds.push(info);
+
+              $scope.forehand = ($scope.forehand +1) % 4;
+              $scope.selA = -1;
+              $scope.selB = -1;
+              $scope.bidselect = 0;
+              $scope.resselect = 0;
+          };
+          $scope.TempResult = function(i){
+              if($scope.selA == -1 || !$scope.bidselect || !$scope.resselect) return [0,0,0,0];
+              return new RoundInfo($scope.bidselect.ticks, $scope.bidselect.plus, $scope.resselect.value, $scope.selA, $scope.selB).score[i];
+          };
+          /*gr: GetRound*/
+          $scope.gr = function(round, player){
+              if($scope.rounds[round]) return $scope.rounds[round].score[player];
+              return "";
+          };
+          $scope.total = function(i){
+              var res = 0;
+              for (var j = 0; j < $scope.rounds.length; j++) {
+                res = res + $scope.rounds[j].score[i]||0;
+              }
+              return res;
+          };
+          $scope.PlayerSelected = function(id){
+              if($scope.selA == id){
+                  $scope.selA = $scope.selB;
+                  $scope.selB = -1;
+              }
+              else { 
+                      if($scope.selB == id){
+                      $scope.selB = -1;
+                  }
+                  else{
+                      $scope.selB = $scope.selA;
+                      $scope.selA = id;
+                  }
+              }
+              if($scope.bid < 7){
+                  $scope.selB = -1;
+              }
+          };
+          $scope.bids =
+              [{id:1, name:"7", ticks:7, plus:false},
+               {id:2, name:"7+", ticks:7, plus:true},
+               {id:3, name:"8", ticks:8, plus:false},
+               {id:4, name:"8+", ticks:8, plus:true},
+               {id:5, name:"9", ticks:9, plus:false},
+               {id:6, name:"sol", ticks:1, plus:true},
+               {id:7, name:"9+", ticks:9, plus:true},
+               {id:8, name:"10", ticks:7, plus:false},
+               {id:9, name:"ren sol", ticks:2, plus:true},
+               {id:10, name:"10+", ticks:10, plus:true},
+               {id:11, name:"11", ticks:11, plus:false},
+               {id:12, name:"bordlægger", ticks:3, plus:true},
+               {id:13, name:"11+", ticks:11, plus:true},
+               {id:14, name:"12", ticks:12, plus:false},
+               {id:15, name:"12+", ticks:12, plus:true},
+               {id:16, name:"13", ticks:13, plus:false},
+               {id:17, name:"13+", ticks:13, plus:true}];
+          $scope.results = [  {value:0, name:"0"},
+                              {value:1, name:"1"},
+                              {value:2, name:"2"},
+                              {value:3, name:"3"},
+                              {value:4, name:"4"},
+                              {value:5, name:"5"},
+                              {value:6, name:"6"},
+                              {value:7, name:"7"},
+                              {value:8, name:"8"},
+                              {value:9, name:"9"},
+                              {value:10, name:"10"},
+                              {value:11, name:"11"},
+                              {value:12, name:"12"},
+                              {value:13, name:"13"}];
+          $scope.setResults = function(){
+              if($scope.results.length != 3 && $scope.bidselect && $scope.bidselect.id == 6){
+                  $scope.selB = -1;
+                  $scope.results= [{value:0, name:"0"},
+                          {value:1, name:"1"},
+                          {value:2, name:"2+"}];
+              }
+              else if($scope.results.length != 2 && $scope.bidselect && ($scope.bidselect.id == 9 || $scope.bidselect.id == 12)){
+                  $scope.selB = -1;
+                  $scope.results = [{value:0, name:"0"},
+                          {value:1, name:"1+"}];
+              }
+              else if($scope.results.length != 14) {
+                  $scope.results = [  {value:0, name:"0"},
+                                      {value:1, name:"1"},
+                                      {value:2, name:"2"},
+                                      {value:3, name:"3"},
+                                      {value:4, name:"4"},
+                                      {value:5, name:"5"},
+                                      {value:6, name:"6"},
+                                      {value:7, name:"7"},
+                                      {value:8, name:"8"},
+                                      {value:9, name:"9"},
+                                      {value:10, name:"10"},
+                                      {value:11, name:"11"},
+                                      {value:12, name:"12"},
+                                      {value:13, name:"13"}];
+              }
+          }
+      }
+    </script>
+  </body>
+</html>
