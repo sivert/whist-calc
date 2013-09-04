@@ -33,7 +33,7 @@
         background-color: #357ebd;
         color: white;
       }
-      @media (max-width: 768px){
+      @media (max-width: 767px){
         .last-btn{
           margin-top:10px;
         }
@@ -47,7 +47,7 @@
   </head>
   <body>
     <div ng-controller="MyCtrl">
-      <div class="container" style="max-width: 700px;">
+      <div class="container" style="max-width: 767px;">
         <div class="panel panel-default">
           <div class="panel-heading">  <h1 class="text-center" style="margin: 0px;">&#9824; <span ng-click="addTestRound(); AddRound();" style="display:inline; color:red;">&#9829;</span><span ng-show="winner()"> {{winner()}} vandt</span> &#9827; <span class="red" ng-click="addTestRound();" style="display:inline;color:red;">&#9830;</span></h1></div>
           <div class="alert alert-danger" ng-show="playerErr" style="margin-bottom: 0px;">Hvem vandt meldingen?</div> 
@@ -75,7 +75,7 @@
           </table>
           <div class="panel-footer">
             <div class="row" ng-show="bidderErr||resultErr">
-              <div class="alert alert-danger" ng-show="bidderErr" >Hvor meget blev der budt?</div>
+              <div class="alert alert-danger" ng-show="bidderErr">Hvor meget blev der budt?</div>
               <div class="alert alert-danger" ng-show="resultErr">Hvor mange stik blev der taget?</div>
             </div>
             <div class="container">
@@ -216,7 +216,9 @@
         $scope.resultErr = false;
         $scope.playerErr = false;
         $scope.AddRound = function(){
-          $scope.bidderErr = false; $scope.resultErr = false; $scope.playerErr = false;
+          $scope.bidderErr = false; 
+          $scope.resultErr = false; 
+          $scope.playerErr = false;
           if($scope.selA == -1){
               $scope.playerErr = true;
           }
@@ -328,6 +330,7 @@
         };
 
         $scope.addTestRound = function(){
+          if($scope.gameState == 0) $scope.startGame();
           var players = _.shuffle([0, 1, 2, 3]);
           $scope.selA = players.pop();
           players.push(-1);
