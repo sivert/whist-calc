@@ -42,6 +42,8 @@
     <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc2/css/bootstrap.min.css" rel="stylesheet">
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/modernizr/modernizr-2.0.6-development-only.js" ></script>
   </head>
   <body>
     <div ng-controller="MyCtrl">
@@ -58,10 +60,10 @@
                 <th><button class="btn btn-large btn-block" ng-class="{active: selA==3||selB==3, forehand:forehand==3 && gameState == 1}" ng-click="PlayerSelected(3);setTempResult();">{{player4}}</button></th>
               </tr>
               <tr ng-show="gameState == 0">
-                <th><input type="text" class="btn-block form-control" placeholder="player1" ng-model="player1input"/></th>
-                <th><input type="text" class="btn-block form-control" placeholder="player2" ng-model="player2input"/></th>
-                <th><input type="text" class="btn-block form-control" placeholder="player3" ng-model="player3input"/></th>
-                <th><input type="text" class="btn-block form-control" placeholder="player4" ng-model="player4input"/></th>
+                <th><input type="text" class="btn-block form-control" id="p1" placeholder="player1" ng-model="player1input"/></th>
+                <th><input type="text" class="btn-block form-control" id="p2" placeholder="player2" ng-model="player2input"/></th>
+                <th><input type="text" class="btn-block form-control" id="p3" placeholder="player3" ng-model="player3input"/></th>
+                <th><input type="text" class="btn-block form-control" id="p4" placeholder="player4" ng-model="player4input"/></th>
               </tr>
             </thead>
             <tbody id="scoreboardbody">
@@ -202,6 +204,12 @@
           $scope.player2 = $scope.player2input ||"player2";
           $scope.player3 = $scope.player3input ||"player3";
           $scope.player4 = $scope.player4input ||"player4";
+          if (Modernizr.localstorage) {
+            localStorage["player1name"] = $scope.player1;
+            localStorage["player2name"] = $scope.player2;
+            localStorage["player3name"] = $scope.player3;
+            localStorage["player4name"] = $scope.player4;
+          }
           $scope.gameState = 1;
         };
         $scope.bidderErr = false;
@@ -328,6 +336,14 @@
           $scope.resselect = _.shuffle($scope.results).pop();
         };
       }
+      $(function() {
+        if (Modernizr.localstorage) {
+            if(localStorage["player1name"]) $('#p1').val(localStorage["player1name"]);
+            if(localStorage["player2name"]) $('#p2').val(localStorage["player2name"]);
+            if(localStorage["player3name"]) $('#p3').val(localStorage["player3name"]);
+            if(localStorage["player4name"]) $('#p4').val(localStorage["player4name"]);
+          }
+      });
     </script>
   </body>
 </html>
